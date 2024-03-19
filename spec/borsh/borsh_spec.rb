@@ -132,6 +132,26 @@ RSpec.describe Borsh do
     end
   end
 
+  context 'with array' do
+    subject(:klass) do
+      Class.new do
+        include Borsh
+
+        borsh value: [:u8]
+
+        def initialize(value)
+          @value = value
+        end
+
+        attr_reader :value
+      end
+    end
+
+    it 'serializes an array' do
+      expect(klass.new([1, 2, 3]).to_borsh).to eq([3, 0, 0, 0, 1, 2, 3].map(&:chr).join)
+    end
+  end
+
   it "has a version number" do
     expect(Borsh::VERSION).not_to be nil
   end
