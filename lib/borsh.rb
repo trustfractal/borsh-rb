@@ -6,6 +6,7 @@ require_relative 'borsh/string'
 require_relative 'borsh/integer'
 require_relative 'borsh/byte_string'
 require_relative 'borsh/bool'
+require_relative 'borsh/optional'
 
 module Borsh
   def self.included(base)
@@ -39,6 +40,12 @@ module Borsh
       end.join
     when :bool
       Bool.new(value).to_borsh
+    when Optional
+      if value.nil?
+        to_borsh_schema(false, :bool)
+      else
+        to_borsh_schema(true, :bool) + to_borsh_schema(value, schema.type)
+      end
     when :borsh
       value.to_borsh
     else
