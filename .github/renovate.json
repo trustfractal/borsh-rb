@@ -1,0 +1,40 @@
+{
+  "extends": [
+    "config:base"
+  ],
+  "prConcurrentLimit": 5,
+  "baseBranches": ["master"],
+  "assignees": ["@strnadj"],
+  "schedule": [
+    "before 6am on the first week of the month"
+  ],
+  "docker": {
+    "enabled": false
+  },
+  "docker-compose": {
+    "enabled": false
+  },
+  "circleci": {
+    "enabled": false
+  },
+  "vulnerabilityAlerts": {
+    "labels": ["dependencies", "security"],
+    "assignees": ["@strnadj", "@juliosantos", "@tiagofragoso"],
+    "schedule": "at any time"
+  },
+  "packageRules": [
+    {
+      "matchPackagePatterns": [
+        "*"
+      ],
+      "matchUpdateTypes": [
+        "major",
+        "minor",
+        "patch"
+      ],
+      "groupName": "all dependencies",
+      "groupSlug": "all-dependencies",
+      "labels": ["dependencies"]
+    }
+  ]
+}

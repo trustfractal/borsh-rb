@@ -1,0 +1,67 @@
+name: Review and deploy
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  target_name:
+    runs-on: ubuntu-latest
+
+    outputs:
+      name: ${{steps.branch_name.outputs.current_branch}}
+      cache_key: ${{steps.cache_key.outputs.key}}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get branch name
+        id: branch_name
+        uses: tj-actions/branch-names@v6.5
+
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - name: Run test
+        run: |
+          bundle exec rspec
+
+  build:
+    needs:
+      - tests
+      - target_name
+
+    runs-on: ubuntu-latest
+
+    if: ${{needs.target_name.outputs.name == 'master'}}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Set up authorization
+        run: |
+          mkdir -p ~/.gem
+          touch ~/.gem/credentials
+          chmod 600 ~/.gem/credentials
+          echo ":github: Bearer ${{ secrets.GITHUB_TOKEN }}" >> ~/.gem/credentials
+
+      - name: Build
+        run: |
+          find . -name '*.gemspec' -maxdepth 1 -exec gem build {} \;
+
+      - name: Deploy
+        run: |
+          find . -name '*.gem' -maxdepth 1 -exec gem push --key github --host "https://rubygems.pkg.github.com/trustfractal" {} \;
