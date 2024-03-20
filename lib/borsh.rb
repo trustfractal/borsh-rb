@@ -5,6 +5,8 @@ require_relative 'borsh/argument_error'
 require_relative 'borsh/string'
 require_relative 'borsh/integer'
 require_relative 'borsh/byte_string'
+require_relative 'borsh/bool'
+require_relative 'borsh/optional'
 
 module Borsh
   def self.included(base)
@@ -36,10 +38,18 @@ module Borsh
       value.flat_map do |item|
         schema.map{ |entry_schema| to_borsh_schema(item, entry_schema) }
       end.join
+    when :bool
+      Bool.new(value).to_borsh
+    when Optional
+      if value.nil?
+        to_borsh_schema(false, :bool)
+      else
+        to_borsh_schema(true, :bool) + to_borsh_schema(value, schema.type)
+      end
     when :borsh
       value.to_borsh
     else
-      raise ArgumentError, "unknown serializer #{schema}, supported serializers: :string, :u8, :u16, :u32, :u64, :u128, :borsh"
+      raise ArgumentError, "unknown serializer #{schema}, supported serializers: :string, :u8, :u16, :u32, :u64, :u128, :bool, :borsh"
     end
   end
 
